@@ -1,5 +1,8 @@
 const http = require('http');
 const express = require('express');
+const socketio = require('socket.io');
+
+const RpgGame = require('./rpg-game');
 
 const app = express();
 
@@ -10,14 +13,29 @@ app.use(express.static(clientPath));
 
 const server = http.createServer(app);
 
-io.on('connection', (sock) =>{
-	sock.emit('message', 'Hi, welcome to the game!')
-})
+const io = socketio(server);
+
+let waitingPlayer = null;
+
+io.on('connection', (sock) => {
+
+  if (waitingPlayer) {
+    new RpgGame(waitingPlayer, sock);
+    waitingPlayer = null;
+  } else {
+    waitingPlayer = sock;
+    waitingPlayer.emit('message', 'Waiting for an opponent');
+  }
+
+  sock.on('message', (text) => {
+    io.emit('message', text);
+  });
+});
 
 server.on('error', (err) => {
-	console.error('Server error:', err)
+  console.error('Server error:', err);
 });
 
 server.listen(8080, () => {
-	console.log('MMORPG Online on 8080')
+  console.log('RPG started on 8080');
 });
