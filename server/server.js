@@ -3,6 +3,7 @@ const express = require('express');
 const socketio = require('socket.io');
 
 const RpgGame = require('./rpg-game');
+const Player = require('./player-game');
 
 const app = express();
 
@@ -20,7 +21,8 @@ let waitingPlayer = null;
 io.on('connection', (sock) => {
 
   if (waitingPlayer) {
-    new RpgGame(waitingPlayer, sock);
+	var player = new Player("Billy");
+    new RpgGame(player, sock);
     waitingPlayer = null;
   } else {
     waitingPlayer = sock;
